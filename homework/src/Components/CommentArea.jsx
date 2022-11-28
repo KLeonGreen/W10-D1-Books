@@ -1,0 +1,80 @@
+import { Component } from "react";
+import CommentList from "../Components/CommentsList.jsx";
+import AddComment from "../Components/AddComment.jsx";
+import { Spinner } from "react-bootstrap";
+
+class CommentArea extends Component {
+  state = {
+    comments: [],
+    isLoading: false,
+  };
+
+  //f(x) to get "comments" by using bookId end point since we dont want all comments on the server
+  // I got the book ID as a prop from the 'SingleBook.jsx' component
+
+  getBooks = async () => {
+    this.setState({ isLoading: true });
+    const options = {
+      headers: {
+        Authorization:
+          "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2MzZlMTgyY2Y4MGYxYTAwMTVkOGEwMmMiLCJpYXQiOjE2NjkyOTY0OTcsImV4cCI6MTY3MDUwNjA5N30.sMiBu2CBbQ4FbAQFIAiKtIgcpySWP-Yt65fPmgJS4vI",
+      },
+    };
+
+    let response = await fetch("https://striveschool-api.herokuapp.com/api/comments/" + this.props.bookID, options);
+
+    if (response.ok) {
+      const data = await response.json();
+      this.setState({
+        comments: data,
+        isLoading: false,
+      });
+      console.log(data);
+    }
+    console.log(this.props.bookID);
+  };
+
+  // running the getBooks function since we cant do it in render()
+  //componentDidMount works almost like window.onload (in vanilla js), it loads once hence calling the f(x)
+
+  componentDidMount() {
+    this.getBooks();
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    console.log(prevProps);
+    if (prevProps.bookID !== this.props.bookID) {
+      this.getBooks();
+    }
+  }
+
+  render() {
+    return (
+      <div style={{ color: "black" }}>
+        <div className="comment-area" type="text">
+          {this.state.isLoading && (
+            <Spinner animation="border" role="status">
+              <span className="visually-hidden"></span>
+            </Spinner>
+          )}
+
+          {this.state.comments.map(
+            (
+              comment //now we have an array of comments from fetch, we map trough it,
+            ) => (
+              // as we map we send each comment object to CommentList.jsx as a prop (line 50)
+              // and send the book Id as a prop in AddComment.jsx component(line 55)
+
+              <CommentList comments={comment} key={comment._id} />
+            )
+          )}
+        </div>
+        <div>
+          <AddComment bookID={this.props.bookID} />
+        </div>
+      </div>
+    );
+  }
+}
+
+export default CommentArea;
